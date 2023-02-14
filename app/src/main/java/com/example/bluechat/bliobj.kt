@@ -9,4 +9,5 @@ object bliobj {
     fun getalldata():List<blueinfo>{
         return listdata
     }
+
 }

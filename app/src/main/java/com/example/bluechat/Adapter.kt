@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-
+//Adapter for paired devices adapter
 class Adapter(var data:List<blueinfo>): RecyclerView.Adapter<Adapter.ViewHolder>(){
     class ViewHolder(itemView: View):RecyclerView.ViewHolder(itemView){
         val devicen:TextView=itemView.findViewById(R.id.devicen)

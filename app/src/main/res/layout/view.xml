@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Priority - High"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:layout_marginTop="5dp"
                 android:textColor="@color/white"
                 android:fontFamily="sans-serif"/>
