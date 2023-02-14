@@ -1,27 +1,37 @@
 package com.example.bluechat
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.*
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bluechat.databinding.ActivityMainBinding
 
+
 private lateinit var binding: ActivityMainBinding
+val REQUEST_ACCESS_COARSE_LOCATION=101
+lateinit var bluetoothManager: BluetoothManager
+lateinit var bluetoothAdapter: BluetoothAdapter
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding=ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
-        val bluetoothAdapter:BluetoothAdapter?=bluetoothManager.adapter
-
+        bluetoothManager=getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothAdapter= bluetoothManager.adapter
 
 
         if(bluetoothAdapter==null){
@@ -39,6 +49,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 startActivity(enablebtintent)
             }
+            if(bluetoothAdapter?.isEnabled==true){
+                bluetoothAdapter.disable()
+            }
 
         }
         binding.on.setOnClickListener {
@@ -52,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                     binding.on.text="turn on"
                 }
                 else{
-                    binding.on.text="its on"
+                    binding.on.text="turn off"
                 }
                 mainhandler.postDelayed(this,1000)
             }
@@ -65,10 +78,68 @@ class MainActivity : AppCompatActivity() {
         paired?.forEach{device ->
             dev.add(device.name)
             addr.add(device.address)
+            bliobj.setdata(device.name,device.address)
         }
-        binding.devi.text=dev.toString()
-        binding.address.text=addr.toString()
 
+        binding.recyclerView.adapter=Adapter(bliobj.getalldata())
+        binding.recyclerView.layoutManager=LinearLayoutManager(this)
+
+       // val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+       // startActivity(intent)
+        binding.scan.setOnClickListener {
+            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
+                when(ContextCompat.checkSelfPermission(baseContext,Manifest.permission.ACCESS_COARSE_LOCATION)){
+                    PackageManager.PERMISSION_DENIED ->{
+                            if (ContextCompat.checkSelfPermission(baseContext,Manifest.permission.ACCESS_COARSE_LOCATION)!=
+                                    PackageManager.PERMISSION_GRANTED){
+                                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                                    REQUEST_ACCESS_COARSE_LOCATION)
+                            }
+                        }
+                    
+                    PackageManager.PERMISSION_GRANTED ->{
+                         Log.d("discoverdevices","permission granted")
+                    }
+                }
+                registerReceiver(mReceiver, IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED))
+                registerReceiver(mReceiver,IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
+                registerReceiver(mReceiver,IntentFilter(BluetoothDevice.ACTION_FOUND))
+                bluetoothAdapter.startDiscovery()
+
+            }
+        }
+        binding.recyclev.layoutManager=LinearLayoutManager(this)
 
     }
+    private val devicelista =ADapter()
+    private val mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent?.action) {
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                    Log.d("hi","started")
+                    devicelista.clearDevices()
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    Log.d("hi","finished")
+                }
+                BluetoothDevice.ACTION_FOUND->{
+                    val device:BluetoothDevice= intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)!!
+                    Log.d("hi","${device.name} ${device.address}")
+                    devicelista.addDevice(device)
+                    Toast.makeText(context,"${device.name} ${device.address}", Toast.LENGTH_SHORT).show()
+                    binding.recyclev.adapter=devicelista
+
+                }
+            }
+        }
+
+    }
+    override fun onDestroy() {
+        devicelista.clearDevices()
+        unregisterReceiver(mReceiver)
+        super.onDestroy()
+    }
+
+
 }
