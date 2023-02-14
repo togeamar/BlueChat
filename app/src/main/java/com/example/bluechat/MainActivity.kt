@@ -22,6 +22,7 @@ import com.example.bluechat.databinding.ActivityMainBinding
 
 private lateinit var binding: ActivityMainBinding
 val REQUEST_ACCESS_COARSE_LOCATION=101
+// define bluetooth manager and adapter
 lateinit var bluetoothManager: BluetoothManager
 lateinit var bluetoothAdapter: BluetoothAdapter
 
@@ -33,13 +34,14 @@ class MainActivity : AppCompatActivity() {
         bluetoothManager=getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter= bluetoothManager.adapter
 
-
+        //check if the device supports bluetooth
         if(bluetoothAdapter==null){
             binding.hi.text="bluetooth is not supported"
         }
         else{
             binding.hi.text="bluetooth is supported"
         }
+        //function to turn bluetooth turn off or on
         fun chblue(){
             if (bluetoothAdapter?.isEnabled==false){
                 val enablebtintent=Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -57,6 +59,8 @@ class MainActivity : AppCompatActivity() {
         binding.on.setOnClickListener {
             chblue()
         }
+        //mainhandler to refresh paired devices list every second which is not a good practice
+        //but i am too lazy to change it.its better handled in available devices list below
         val mainhandler=Handler(Looper.getMainLooper())
 
         mainhandler.post(object:Runnable {
@@ -84,8 +88,11 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.adapter=Adapter(bliobj.getalldata())
         binding.recyclerView.layoutManager=LinearLayoutManager(this)
 
+        //commented code used for making android discoverable
        // val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
        // startActivity(intent)
+
+        //taking location service permission
         binding.scan.setOnClickListener {
             if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
                 when(ContextCompat.checkSelfPermission(baseContext,Manifest.permission.ACCESS_COARSE_LOCATION)){
@@ -101,9 +108,11 @@ class MainActivity : AppCompatActivity() {
                          Log.d("discoverdevices","permission granted")
                     }
                 }
+                //registering receiver which will receive actions in onreceive
                 registerReceiver(mReceiver, IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED))
                 registerReceiver(mReceiver,IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
                 registerReceiver(mReceiver,IntentFilter(BluetoothDevice.ACTION_FOUND))
+                //starting scanning process
                 bluetoothAdapter.startDiscovery()
 
             }
@@ -111,7 +120,9 @@ class MainActivity : AppCompatActivity() {
         binding.recyclev.layoutManager=LinearLayoutManager(this)
 
     }
+    //defining adapter
     private val devicelista =ADapter()
+    //initializing Broadcast receiver
     private val mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
@@ -128,6 +139,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d("hi","${device.name} ${device.address}")
                     devicelista.addDevice(device)
                     Toast.makeText(context,"${device.name} ${device.address}", Toast.LENGTH_SHORT).show()
+                    //updating list of devices everytime we found new device
                     binding.recyclev.adapter=devicelista
 
                 }
