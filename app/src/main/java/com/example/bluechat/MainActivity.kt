@@ -122,6 +122,7 @@ class MainActivity : AppCompatActivity() {
     }
     //defining adapter
     private val devicelista =ADapter()
+
     //initializing Broadcast receivr
     private val mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
