@@ -25,7 +25,6 @@ val REQUEST_ACCESS_COARSE_LOCATION=101
 // define bluetooth manager and adapter
 lateinit var bluetoothManager: BluetoothManager
 lateinit var bluetoothAdapter: BluetoothAdapter
-
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
