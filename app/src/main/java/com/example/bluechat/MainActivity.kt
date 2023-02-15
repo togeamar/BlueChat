@@ -84,8 +84,10 @@ class MainActivity : AppCompatActivity() {
             bliobj.setdata(device.name,device.address)
         }
 
-        binding.recyclerView.adapter=Adapter(bliobj.getalldata())
+        val pa= Adapter(bliobj.getalldata())
+        binding.recyclerView.adapter=pa
         binding.recyclerView.layoutManager=LinearLayoutManager(this)
+
 
         //commented code used for making android discoverable
        // val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
@@ -122,6 +124,8 @@ class MainActivity : AppCompatActivity() {
     //defining adapter
     private val devicelista =ADapter()
 
+
+
     //initializing Broadcast receivr
     private val mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
@@ -147,6 +151,7 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
     override fun onDestroy() {
         devicelista.clearDevices()
         unregisterReceiver(mReceiver)
