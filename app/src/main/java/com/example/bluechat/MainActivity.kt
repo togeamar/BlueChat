@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,6 +19,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bluechat.databinding.ActivityMainBinding
+import java.io.InputStream
+import java.io.OutputStream
 
 
 private lateinit var binding: ActivityMainBinding
@@ -25,7 +28,12 @@ val REQUEST_ACCESS_COARSE_LOCATION=101
 // define bluetooth manager and adapter
 lateinit var bluetoothManager: BluetoothManager
 lateinit var bluetoothAdapter: BluetoothAdapter
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity()  {
+    private var selectedpos:Int=-1
+
+    private var bluetoothSocket: BluetoothSocket? = null
+    private var inputStream: InputStream? = null
+    private var outputStream: OutputStream? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding=ActivityMainBinding.inflate(layoutInflater)
@@ -76,22 +84,30 @@ class MainActivity : AppCompatActivity() {
 
         val dev= mutableListOf<String>()
         val addr= mutableListOf<String>()
+        val bld= mutableListOf<BluetoothDevice>()
 
-        val paired:Set<BluetoothDevice>?=bluetoothAdapter?.bondedDevices
-        paired?.forEach{device ->
-            dev.add(device.name)
-            addr.add(device.address)
-            bliobj.setdata(device.name,device.address)
+        fun update(){
+            val paired:Set<BluetoothDevice>?=bluetoothAdapter?.bondedDevices
+            paired?.forEach{device ->
+                dev.add(device.name)
+                addr.add(device.address)
+                bld.add(device)
+                bliobj.setdata(device.name,device.address,device)
+            }
+
+            val pa= Adapter(bliobj.getalldata())
+            binding.recyclerView.adapter=pa
+            binding.recyclerView.layoutManager=LinearLayoutManager(this)
         }
+        update()
 
-        val pa= Adapter(bliobj.getalldata())
-        binding.recyclerView.adapter=pa
-        binding.recyclerView.layoutManager=LinearLayoutManager(this)
 
 
         //commented code used for making android discoverable
        // val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
        // startActivity(intent)
+
+
 
         //taking location service permission
         binding.scan.setOnClickListener {
@@ -119,8 +135,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
         binding.recyclev.layoutManager=LinearLayoutManager(this)
+        binding.update.setOnClickListener{
+            bliobj.deleteall()
+            update()
+        }
 
     }
+
+
+
     //defining adapter
     private val devicelista =ADapter()
 
@@ -136,6 +159,7 @@ class MainActivity : AppCompatActivity() {
                     devicelista.clearDevices()
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    binding.recyclev.adapter=devicelista
                     Log.d("hi","finished")
                 }
                 BluetoothDevice.ACTION_FOUND->{

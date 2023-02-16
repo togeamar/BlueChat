@@ -38,6 +38,11 @@ class ADapter : RecyclerView.Adapter<ADapter.ViewHolder>(){
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.devicen.text=devices[position].name
         holder.addres.text=devices[position].address
+        holder.itemView.setOnClickListener{
+            if(devices[position].bondState==BluetoothDevice.BOND_NONE){
+                devices[position].createBond()
+            }
+        }
     }
 
 
